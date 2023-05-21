@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app=express();
 const port=process.env.PORT || 5000;
@@ -38,10 +38,15 @@ async function run() {
       if (req.query?.email) {
         query={email: req.query.email}
       }
+      if (req.query?.category) {
+        query={...query,category: req.query.category}
+      }
       
       const result=await toyCollection.find(query).toArray();
       res.send(result);
     })
+
+    
 
     
 
@@ -50,12 +55,31 @@ async function run() {
             const query = { _id: new ObjectId(id) }
       const options = {
                 // Include only the `title` and `imdb` fields in the returned document
-                projection: { price: 1, quantity: 1, picurl: 1, detail: 1 },
+                projection: {_id:1, price: 1, quantity: 1, picurl: 1, detail: 1 },
             };
       
       const result = await toyCollection.findOne(query, options);
             res.send(result);
         })
+
+
+      //   //updtate
+      //   app.patch('/alltoys/:id', async (req, res) => {
+      //     const id = req.params.id;
+      //     const filter = { _id: new ObjectId(id) };
+      //     const updatedtoy = req.body;
+      //     console.log(updatedtoy);
+      //     const updateDoc = {
+      //         $set: {
+      //             name:updatedtoy.name,
+      //             quantity:updatedtoy.quantity,
+      //             detail: updatedtoy.detail
+      //         },
+      //     };
+      //     const result = await toyCollection.updateOne(filter, updateDoc);
+      //     res.send(result);
+      // })
+
 
 app.delete('/alltoys/:id', async (req, res) => {
             const id = req.params.id;
