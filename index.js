@@ -43,11 +43,26 @@ async function run() {
       res.send(result);
     })
 
+    
 
-  //  // app.get("/alltoys",async (req,res)=>{
-  //     const result=await toyCollection.find({}).toArray();
-  //     res.send(result);
-  //   })
+    app.get("/alltoys/:id",async (req,res)=>{
+      const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+      const options = {
+                // Include only the `title` and `imdb` fields in the returned document
+                projection: { price: 1, quantity: 1, picurl: 1, detail: 1 },
+            };
+      
+      const result = await toyCollection.findOne(query, options);
+            res.send(result);
+        })
+
+app.delete('/alltoys/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await toyCollection.deleteOne(query);
+            res.send(result);
+        })
 
 
 
