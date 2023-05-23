@@ -31,20 +31,34 @@ async function run() {
     //collection create
     const toyCollection = client.db("toymarket").collection("alltoy");
     
+//search all toy
+   app.get("/alltoysearch/:searchText", async (req, res) => {
+  const searchText = req.params.searchText;
 
-    app.get("/alltoys",async (req,res)=>{
-      console.log(req.query.email);
-      let query={};
-      if (req.query?.email) {
-        query={email: req.query.email}
-      }
-      if (req.query?.category) {
-        query={...query,category: req.query.category}
-      }
+  const result = await toyCollection
+    .find({ name: { $regex: searchText, $options: "i" } })
+    .toArray();
+
+  res.send(result);
+});
+
+    //all toy
+    app.get("/alltoy/:text",async (req,res)=>{
+     
       
-      const result=await toyCollection.find(query).toArray();
+      
+       const filter={category:req.params.text}
+      const result=await toyCollection.find(filter).toArray();
+     
       res.send(result);
     })
+
+
+    app.get('/alltoys', async (req, res) => {
+            const cursor = toyCollection.find();
+            const result = await cursor.limit(20).toArray();
+            res.send(result);
+        })
 
     
 
@@ -55,30 +69,61 @@ async function run() {
             const query = { _id: new ObjectId(id) }
       const options = {
                 // Include only the `title` and `imdb` fields in the returned document
-                projection: {_id:1, price: 1, quantity: 1, picurl: 1, detail: 1 },
+                projection: {_id:1, price: 1, quantity: 1, picurl: 1, detail: 1,email: 1,name: 1,rating: 1 }
+                
             };
       
       const result = await toyCollection.findOne(query, options);
             res.send(result);
         })
 
+// data sorting
+app.get('/alltoys', async (req, res) => {
+  const { sortBy } = req.query;
+  let sortOption = {};
 
-      //   //updtate
-      //   app.patch('/alltoys/:id', async (req, res) => {
-      //     const id = req.params.id;
-      //     const filter = { _id: new ObjectId(id) };
-      //     const updatedtoy = req.body;
-      //     console.log(updatedtoy);
-      //     const updateDoc = {
-      //         $set: {
-      //             name:updatedtoy.name,
-      //             quantity:updatedtoy.quantity,
-      //             detail: updatedtoy.detail
-      //         },
-      //     };
-      //     const result = await toyCollection.updateOne(filter, updateDoc);
-      //     res.send(result);
-      // })
+  if (sortBy === 'asc') {
+    sortOption = { price: 1 };
+    
+
+  } else if (sortBy === 'desc') {
+    sortOption = { price: -1 };
+  }
+
+  
+
+    if (Object.keys(sortOption).length == 0) {
+      cursor = toyCollection.find();
+    } else {
+      cursor = toyCollection.find().sort(price);
+    }
+
+    const result = await cursor.toArray();
+    res.send(result);
+  
+});
+
+
+
+
+        //updtate
+       app.patch('/alltoys/:id', async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedToy = req.body;
+
+  const updateDoc = {
+    $set: {
+      name: updatedToy.name,
+      quantity: updatedToy.quantity,
+      detail: updatedToy.detail
+    },
+  };
+
+  const result = await toyCollection.updateOne(filter, updateDoc);
+  res.send(result);
+});
+
 
 
 app.delete('/alltoys/:id', async (req, res) => {
